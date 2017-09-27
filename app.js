@@ -14,6 +14,7 @@ app.get('/', function(req, res) {
 
 
 app.get('/api/notam', function(req, res) {
+  console.log(`Sending ${orgmap.length} map objects to javascript`);
   res.json(orgmap);
 });
 
@@ -28,10 +29,9 @@ const request = require('request');
 const cheerio = require('cheerio');
 
 
-function parsePage() {
+function parsePage(place) {
 
-
-  const place = 'EKDK';
+  if (!place) place = 'EKDK';
   const page =
     "https://pilotweb.nas.faa.gov/PilotWeb/notamRetrievalByICAOAction.do?method=displayByICAOs&reportType=RAW&formatType=ICAO&actionType=notamRetrievalByICAOs&retrieveLocId=" +
     place;
@@ -59,10 +59,15 @@ function parsePage() {
 var notam_objects = [];
 var orgmap = [];
 
+/*
 orgmap.push(createMapObject('EKRK', 55.590385, 12.129340));
 orgmap.push(createMapObject('EKCH', 55.618024, 12.650763));
 orgmap.push(createMapObject('EKOD', 55.473886, 10.329182));
 orgmap.push(createMapObject('EKEB', 55.525833, 8.553333));
+*/
+
+parsePage('EKDK');
+
 
 function process_notams(notams) {
 
@@ -197,17 +202,18 @@ function dump_notam(nObj) {
   console.log(`From Alt: ${nObj.fromAlt} to ${nObj.toAlt}`);
   console.log(`Text: ${nObj.text}`);
 
-  orgmap.push(createMapObject(nObj.place, nObj.lat, nObj.lng))
+  orgmap.push(createMapObject(nObj.place, nObj.lat, nObj.lng, nObj.text));
 }
 
 
 
-function createMapObject(PLACE, LAT, LON) {
+function createMapObject(PLACE, LAT, LON, TXT) {
   return {
     name: PLACE,
     center: {
       lat: LAT,
       lng: LON
-    }
+    },
+    text: TXT
   }
 }

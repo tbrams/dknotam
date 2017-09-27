@@ -58,7 +58,7 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
         console.log('Match: ' + citymap[c].id);
 
         infoWindow.setOptions({
-          content: '<p>' + citymap[c].name + '<br/>Clicked:<br/>(' +
+          content: '<p>' + citymap[c].text + '<br/>Clicked:<br/>(' +
             ev.latLng.lat().toFixed(3) + ', ' +
             ev.latLng.lng().toFixed(3) + ')</p>'
         });
