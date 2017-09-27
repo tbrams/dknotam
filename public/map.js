@@ -14,7 +14,7 @@ function initMap() {
   });
   var infoWindow = new google.maps.InfoWindow({
     content: "<div>Hello! World</div>",
-    maxWidth: 500
+    maxWidth: 700
   });
 
   var counter = 100;
@@ -26,13 +26,19 @@ function initMap() {
     for (var i = 0; i < citymap.length; i++) {
       var city = citymap[i];
       console.log('Adding places');
-
+      console.log('Soon: ' + city.soon);
+      // For upcoming notams, use another color
+      let color = '#FF0000';
+      if (city.soon == 'Y') {
+        console.log(`Soon color used for ${city.text}`);
+        color = '#FFFF00';
+      }
       // Add the circle for this city to the map.
       cityCircle = new google.maps.Circle({
         strokeColor: '#FF0000',
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillColor: '#FF0000',
+        fillColor: color,
         fillOpacity: 0.35,
         map: map,
         center: city.center,

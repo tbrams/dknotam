@@ -57,6 +57,7 @@ function parsePage(place) {
 
 
 var notam_objects = [];
+var notam_objects_24hrs = [];
 var orgmap = [];
 
 /*
@@ -73,6 +74,8 @@ function process_notams(notams) {
 
   let ignored = 0;
   let errors = 0;
+  let dateSkip = 0;
+
   let count = notams.length;
   for (var i = 0; i < count; i++) {
     let notam = notams[i];
@@ -105,6 +108,7 @@ function process_notams(notams) {
             place: '',
             fromDate: '',
             toDate: '',
+            soon: '',
             qCode: qCode,
             fromAlt: '',
             toAlt: '',
@@ -150,12 +154,19 @@ function process_notams(notams) {
 
           if (line2parts[2] == 'B)') {
             let fromDate = line2parts[3];
-            nObject.fromDate = fromDate;
+            nObject.fromDate = getDate(fromDate);
           }
 
           if (line2parts[4] == 'C)') {
             let toDate = line2parts[5];
-            nObject.toDate = toDate;
+            if (toDate != 'PERM') {
+              nObject.toDate = getDate(toDate);
+            } else {
+              // Create a Date one year ahead from now, so it will be allways active.
+              var theFuture = new Date(new Date().setFullYear(new Date().getFullYear() +
+                1));
+              nObject.toDate = theFuture;
+            }
           }
 
           // Line with E
@@ -170,8 +181,34 @@ function process_notams(notams) {
               nObject.text += '\n' + lines[textLine];
             }
           }
-          notam_objects.push(nObject);
-          dump_notam(nObject);
+
+          let now = getUtcTime(new Date());
+          if (nObject.fromDate <= now) {
+            console.log('fromDate OK');
+            if (now <= nObject.toDate) {
+              console.log('toDate OK');
+
+              // We are done checking - let's save the Notam object
+              notam_objects.push(nObject);
+              dump_notam(nObject);
+            } else {
+              dateSkip++;
+              console.log('Skipping this one - expired');
+            }
+          } else {
+            // Will it start within the next 24 hours?
+            if (nObject.fromDate <= getTomorrow(now)) {
+              console.log('This will start within 24hrs');
+              nObject['soon'] = 'Y';
+              // We are done checking - let's save the Notam object
+              notam_objects.push(nObject);
+              dump_notam(nObject);
+
+            } else {
+              dateSkip++;
+              console.log('Skipping this one - not started');
+            }
+          }
         }
 
       } else {
@@ -186,6 +223,8 @@ function process_notams(notams) {
   console.log(`Processed a total of ${count} notams`);
   if (ignored > 0)
     console.log(`Marked ${ignored} as ignored`);
+  if (dateSkip > 0)
+    console.log(`# Not valid date: ${dateSkip}`);
   if (errors > 0)
     console.log(`Encountered ${errors}`);
 }
@@ -202,18 +241,67 @@ function dump_notam(nObj) {
   console.log(`From Alt: ${nObj.fromAlt} to ${nObj.toAlt}`);
   console.log(`Text: ${nObj.text}`);
 
-  orgmap.push(createMapObject(nObj.place, nObj.lat, nObj.lng, nObj.text));
+  if (nObj.soon == 'Y') {
+    console.log('NOTE: This notam will start within next 24 hrs\n');
+  }
+
+  orgmap.push(createMapObject(nObj));
 }
 
 
 
-function createMapObject(PLACE, LAT, LON, TXT) {
+function createMapObject(notam) {
   return {
-    name: PLACE,
+    name: notam.place,
     center: {
-      lat: LAT,
-      lng: LON
+      lat: notam.lat,
+      lng: notam.lng
     },
-    text: TXT
+    text: notam.txt,
+    soon: notam.soon
   }
+}
+
+/**
+ * Take the Notam date string and return a real Date object.
+ *
+ * @param  {String} dateStr A String like "1709280700"
+ * @return {Date}           An equivalent Date object
+ */
+function getDate(dateStr) {
+  return new Date(20 + dateStr.substring(0, 2), (dateStr.substring(2, 4) - 1),
+    dateStr.substring(4, 6),
+    dateStr.substring(6, 8),
+    dateStr.substring(8, 10));
+}
+
+/**
+ * Calculate and return a Date object with the UTC time of the time passed in.
+ *
+ * @param  {Date} today Date in local time.
+ * @return {Date}       Date in UTC time.
+ */
+function getUtcTime(today) {
+  return new Date(today.getTime() + today.getTimezoneOffset() * 60000);
+}
+
+
+/**
+ * Create and return a Date object set for tomorrow.
+ * @param  {Date} today Our "today" date
+ * @return {Date}       The day after
+ */
+function getTomorrow(today) {
+  var tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  return tomorrow;
+}
+
+/**
+ * Return a Date object from the future.
+ * @return {Date} A Date one year from now.
+ */
+function getOneMoreYear() {
+  return new Date(new Date().setFullYear(new Date().getFullYear() + 1));
 }
