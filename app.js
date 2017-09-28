@@ -5,6 +5,10 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', 'public');
 
+// Serve the web page using ejs
+//
+// TODO: Eliminate ejs again ...
+//
 app.get('/', function(req, res) {
   res.render('index', {
     pageData: '[1,2,3]',
@@ -13,9 +17,10 @@ app.get('/', function(req, res) {
 })
 
 
+// Pass on a json version of the internal notam objects
 app.get('/api/notam', function(req, res) {
-  console.log(`Sending ${orgmap.length} map objects to javascript`);
-  res.json(orgmap);
+  console.log(`Sending ${notam_objects.length} notam objects to javascript`);
+  res.json(notam_objects);
 });
 
 
@@ -24,12 +29,20 @@ app.listen(3000);
 console.log('Listening on port 3000');
 
 
-
+// Needed to fetch and get to the Notam details
 const request = require('request');
 const cheerio = require('cheerio');
 
-
-function parsePage(place) {
+/**
+ * Look up Notams at the FAA.GOV site for a particular station.
+ *
+ * The Notams are collected as strings and added to an interal Array
+ * notams and subsequently passed to the parser process_notams
+ *
+ * @param  {String} place ICAO name, for example EKDK
+ * @return None
+ */
+function getNotams(place) {
 
   if (!place) place = 'EKDK';
   const page =
@@ -49,7 +62,7 @@ function parsePage(place) {
       });
     }
 
-    process_notams(notams);
+    parseNotams(notams);
 
   });
 }
@@ -57,20 +70,21 @@ function parsePage(place) {
 
 
 var notam_objects = [];
-var notam_objects_24hrs = [];
-var orgmap = [];
 
-/*
-orgmap.push(createMapObject('EKRK', 55.590385, 12.129340));
-orgmap.push(createMapObject('EKCH', 55.618024, 12.650763));
-orgmap.push(createMapObject('EKOD', 55.473886, 10.329182));
-orgmap.push(createMapObject('EKEB', 55.525833, 8.553333));
-*/
-
-parsePage('EKDK');
-
-
-function process_notams(notams) {
+/**
+ * This is where the text input from the NOTAM server is parsed. All data
+ * is extracted and added to the internal Notam object nObject unless it is
+ * a Notam that should be ignored.
+ *
+ * When all is in place the nObject will be printed to the console and a
+ * smaller object will be created with data for the GET event.
+ *
+ * TODO:  Need to eliminate the additional object here
+ *
+ * @param  {Array of String} notams One String with each Notam in an array
+ * @return {None}
+ */
+function parseNotams(notams) {
 
   let ignored = 0;
   let errors = 0;
@@ -229,6 +243,14 @@ function process_notams(notams) {
     console.log(`Encountered ${errors}`);
 }
 
+
+
+/**
+ * Give visual feedback on the console - parsed Notam information.
+ *
+ * @param  {object} nObj Notam Object
+ * @return none
+ */
 function dump_notam(nObj) {
   console.log(`Id: ${nObj.id}`);
   console.log(`Q-code: ${nObj.qCode}`);
@@ -244,23 +266,9 @@ function dump_notam(nObj) {
   if (nObj.soon == 'Y') {
     console.log('NOTE: This notam will start within next 24 hrs\n');
   }
-
-  orgmap.push(createMapObject(nObj));
 }
 
 
-
-function createMapObject(notam) {
-  return {
-    name: notam.place,
-    center: {
-      lat: notam.lat,
-      lng: notam.lng
-    },
-    text: notam.txt,
-    soon: notam.soon
-  }
-}
 
 /**
  * Take the Notam date string and return a real Date object.
@@ -298,6 +306,7 @@ function getTomorrow(today) {
   return tomorrow;
 }
 
+
 /**
  * Return a Date object from the future.
  * @return {Date} A Date one year from now.
@@ -305,3 +314,28 @@ function getTomorrow(today) {
 function getOneMoreYear() {
   return new Date(new Date().setFullYear(new Date().getFullYear() + 1));
 }
+
+
+/**
+ * This is intended to test and debug. Change the content of the
+ * NOTAM below and see the result all the way through without having
+ * to sift to a tons of official notams.
+ *
+ * @return {none}
+ */
+function runTest() {
+  var testData = [];
+  var testStr = 'Raw notam: C0951/17 NOTAMN\n';
+  testStr += 'Q) EKDK/QRRCA/IV/BO /W /000/027/5538N00811E007\n';
+  testStr += 'A) EKDK B) 1709290700 C) PERM\n';
+  testStr += 'E) RESTRICTED AREA EKR34 BORDRUP ACTIVATED\n';
+  testStr += 'F) SFC G) 2700FT AMSL\n';
+  testStr += 'CREATED: 27 Sep 2017 11:20:00\n';
+  testStr += 'SOURCE: EUECYIYN\n';
+  testData.push(testStr);
+
+  parseNotams(testData);
+}
+
+// Remember to comment out this one when testing
+getNotams('EKDK');

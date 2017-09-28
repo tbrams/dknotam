@@ -1,5 +1,5 @@
 var radius = 5000;
-var citymap = [];
+var notam_objects = [];
 
 function initMap() {
 
@@ -20,32 +20,35 @@ function initMap() {
   var counter = 100;
   $.get('/api/notam', function(data) {
     var stringData = JSON.stringify(data);
-    citymap = JSON.parse(stringData);
+    notam_objects = JSON.parse(stringData);
 
-    // Construct the circle for each value in citymap.
-    for (var i = 0; i < citymap.length; i++) {
-      var city = citymap[i];
-      console.log('Adding places');
-      console.log('Soon: ' + city.soon);
+    // Construct the circle for each value in notam_objects.
+    for (var i = 0; i < notam_objects.length; i++) {
+      var notam = notam_objects[i];
+      console.log(`Adding notam #${i}`);
+      console.log('Soon: ' + notam.soon);
+
       // For upcoming notams, use another color
       let color = '#FF0000';
-      if (city.soon == 'Y') {
-        console.log(`Soon color used for ${city.text}`);
-        color = '#FFFF00';
+      if (notam.soon == 'Y') {
+        color = '#00FF00';
       }
-      // Add the circle for this city to the map.
-      cityCircle = new google.maps.Circle({
+      // Add the circle for this notam to the map.
+      notamCircle = new google.maps.Circle({
         strokeColor: '#FF0000',
         strokeOpacity: 0.8,
         strokeWeight: 2,
         fillColor: color,
         fillOpacity: 0.35,
         map: map,
-        center: city.center,
+        center: {
+          lat: notam.lat,
+          lng: notam.lng
+        },
         radius: radius
       });
 
-      addIdToCircle(cityCircle, i, map, infoWindow, counter++);
+      addIdToCircle(notamCircle, i, map, infoWindow, counter++);
 
     }
 
@@ -55,16 +58,18 @@ function initMap() {
 function addIdToCircle(circle, i, map, infoWindow, id) {
   // wiring up id's
   circle['id'] = id;
-  citymap[i]['id'] = id;
+  notam_objects[i]['id'] = id;
 
   google.maps.event.addListener(circle, 'click', function(ev) {
     console.log('Clicked on Id: ' + circle.id);
-    for (var c in citymap) {
-      if (citymap[c].id == circle.id) {
-        console.log('Match: ' + citymap[c].id);
+    for (var c in notam_objects) {
+      if (notam_objects[c].id == circle.id) {
+        console.log('Match: ' + notam_objects[c].id);
+        console.dir(notam_objects[c]);
 
         infoWindow.setOptions({
-          content: '<p>' + citymap[c].text + '<br/>Clicked:<br/>(' +
+          content: '<p>' + notam_objects[c].text +
+            '<br/>Clicked:<br/>(' +
             ev.latLng.lat().toFixed(3) + ', ' +
             ev.latLng.lng().toFixed(3) + ')</p>'
         });
