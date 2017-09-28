@@ -17,6 +17,13 @@ function initMap() {
     maxWidth: 700
   });
 
+  // Use the infoWindow closeclick event to make sure that we clear
+  // notices listed below the map, as they will only be relevant to
+  // a selection.
+  google.maps.event.addListener(infoWindow, 'closeclick', function() {
+    $('#overlapping').html('');
+  });
+
   var counter = 100;
   $.get('/api/notam', function(data) {
     var stringData = JSON.stringify(data);
@@ -61,13 +68,11 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
   google.maps.event.addListener(circle, 'click', function(ev) {
     console.log('Clicked on Id: ' + circle.id);
 
-    // clear previous notices - if any
-    $('#overlapping').html('');
-
     for (var i in notam_objects) {
       let notam = notam_objects[i];
       if (notam.id == circle.id) {
         console.log('Match: ' + notam.id);
+        console.dir(notam);
 
         // check if there are other overlapping notams at the same coordinate
         let myOtherNotams = findNotamsAt(notam.id, notam.lat, notam.lng);

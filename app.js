@@ -99,6 +99,8 @@ function parseNotams(notams) {
       ignored++;
     } else {
 
+      let nameParts = lines[0].split(' ');
+      let name = nameParts[0];
 
       // Get to the Q-code on line 2
       let qParts = lines[1].split(' ');
@@ -114,6 +116,7 @@ function parseNotams(notams) {
           // Create object to hold all the info
           var nObject = {
             id: lines[0].split(' ')[0],
+            name: name,
             place: '',
             fromDate: '',
             toDate: '',
@@ -319,7 +322,7 @@ function getOneMoreYear() {
 function runTest() {
   var testData = [];
   var testStr = 'Raw notam: C0951/17 NOTAMN\n';
-  testStr += 'Q) EKDK/QRRCA/IV/BO /W /000/027/5538S00811W007\n';
+  testStr += 'Q) EKDK/QRRCA/IV/BO /W /000/027/5538N00811E007\n';
   testStr += 'A) EKDK B) 1709290700 C) PERM\n';
   testStr += 'E) RESTRICTED AREA EKR34 BORDRUP ACTIVATED\n';
   testStr += 'F) SFC G) 2700FT AMSL\n';
@@ -333,4 +336,4 @@ function runTest() {
 //runTest();
 
 // Remember to comment out this one when testing
-getNotams('EKDK');
+getNotams('EKRK');
