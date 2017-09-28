@@ -25,8 +25,6 @@ function initMap() {
     // Construct the circle for each value in notam_objects.
     for (var i = 0; i < notam_objects.length; i++) {
       var notam = notam_objects[i];
-      console.log(`Adding notam #${i}`);
-      console.log('Soon: ' + notam.soon);
 
       // For upcoming notams, use another color
       let color = '#FF0000';
@@ -63,15 +61,17 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
   google.maps.event.addListener(circle, 'click', function(ev) {
     console.log('Clicked on Id: ' + circle.id);
     for (var c in notam_objects) {
-      if (notam_objects[c].id == circle.id) {
-        console.log('Match: ' + notam_objects[c].id);
-        console.dir(notam_objects[c]);
+      let notam = notam_objects[c];
+      if (notam.id == circle.id) {
+        console.log('Match: ' + notam.id);
 
+        console.dir(notam);
+        let date1 = formatDate(notam.fromDate);
+        let date2 = formatDate(notam.toDate);
         infoWindow.setOptions({
-          content: '<p>' + notam_objects[c].text +
-            '<br/>Clicked:<br/>(' +
-            ev.latLng.lat().toFixed(3) + ', ' +
-            ev.latLng.lng().toFixed(3) + ')</p>'
+          content: `<p>${notam.text}</p>` +
+            `<p>Altitudes: ${notam.fromAlt} - ${notam.toAlt} within a radius of: ${notam.radius} nm<br/>` +
+            `Valid from: ${date1} to: ${date2}<br/></p>`
         });
       }
 
@@ -79,4 +79,15 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
       infoWindow.open(map);
     }
   });
+}
+
+
+/**
+ * Format Date Object to be more readable and clearly UTC time.
+ *
+ * @param  {String} d Date object formatted as a string
+ * @return {String} Date formatted as "yyyy-mm-dd hh:mm utc"
+ */
+function formatDate(d) {
+  return (d.substr(0, 10) + ' ' + d.substr(11, 5) + ' UTC');
 }

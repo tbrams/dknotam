@@ -127,9 +127,7 @@ function parseNotams(notams) {
             fromAlt: '',
             toAlt: '',
             lat: '',
-            latChar: '',
             lng: '',
-            lngChar: '',
             radius: '',
             text: ''
           }
@@ -138,22 +136,22 @@ function parseNotams(notams) {
           let radius = qInfoParts[qInfoParts.length - 1].slice(-3);
           let coordinates = qInfoParts[qInfoParts.length - 1].slice(0, -3);
 
-          let latChar = 'S';
-          if (coordinates.indexOf('N')) {
-            latChar = 'N';
-          }
-          let cordarr = coordinates.split(latChar);
+
+          let separator = 'N';
+          if (coordinates.indexOf('S') > 0) separator = 'S';
+          let cordarr = coordinates.split(separator);
 
           let lat = cordarr[0] / 100.;
           let lng = cordarr[1].slice(0, -1) / 100.;
-          let lonChar = cordarr[1].slice(-1);
+
+          if (coordinates.indexOf('S') > 0) lat *= -1;
+          if (coordinates.indexOf('W') > 0) lng *= -1;
+
           let toAlt = qInfoParts[qInfoParts.length - 2];
           let fromAlt = qInfoParts[qInfoParts.length - 3];
 
           nObject.lat = lat;
           nObject.lng = lng;
-          nObject.latChar = latChar;
-          nObject.lngChar = lonChar;
           nObject.fromAlt = fromAlt;
           nObject.toAlt = toAlt;
           nObject.radius = radius;
@@ -258,7 +256,7 @@ function dump_notam(nObj) {
   console.log(`From: ${nObj.fromDate}`);
   console.log(`To: ${nObj.toDate}`);
   console.log(
-    `coords: ${nObj.lat}${nObj.latChar} ${nObj.lng}${nObj.lngChar} - radius: ${nObj.radius}`
+    `coords: ${nObj.lat} ${nObj.lng} - radius: ${nObj.radius}`
   );
   console.log(`From Alt: ${nObj.fromAlt} to ${nObj.toAlt}`);
   console.log(`Text: ${nObj.text}`);
@@ -326,7 +324,7 @@ function getOneMoreYear() {
 function runTest() {
   var testData = [];
   var testStr = 'Raw notam: C0951/17 NOTAMN\n';
-  testStr += 'Q) EKDK/QRRCA/IV/BO /W /000/027/5538N00811E007\n';
+  testStr += 'Q) EKDK/QRRCA/IV/BO /W /000/027/5538S00811W007\n';
   testStr += 'A) EKDK B) 1709290700 C) PERM\n';
   testStr += 'E) RESTRICTED AREA EKR34 BORDRUP ACTIVATED\n';
   testStr += 'F) SFC G) 2700FT AMSL\n';
@@ -337,5 +335,7 @@ function runTest() {
   parseNotams(testData);
 }
 
+runTest();
+
 // Remember to comment out this one when testing
-getNotams('EKDK');
+//getNotams('EKDK');
