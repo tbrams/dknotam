@@ -2,19 +2,14 @@ const express = require('express');
 var app = express();
 
 app.use(express.static('public'));
-app.set('view engine', 'ejs');
-app.set('views', 'public');
 
-// Serve the web page using ejs
-//
-// TODO: Eliminate ejs again ...
-//
 app.get('/', function(req, res) {
   res.render('index', {
     pageData: '[1,2,3]',
     pageTitle: 'VERY Different!'
   });
 })
+
 
 
 // Pass on a json version of the internal notam objects
@@ -335,7 +330,7 @@ function runTest() {
   parseNotams(testData);
 }
 
-runTest();
+//runTest();
 
 // Remember to comment out this one when testing
-//getNotams('EKDK');
+getNotams('EKDK');

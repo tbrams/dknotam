@@ -60,18 +60,33 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
 
   google.maps.event.addListener(circle, 'click', function(ev) {
     console.log('Clicked on Id: ' + circle.id);
-    for (var c in notam_objects) {
-      let notam = notam_objects[c];
+
+    // clear previous notices - if any
+    $('#overlapping').html('');
+
+    for (var i in notam_objects) {
+      let notam = notam_objects[i];
       if (notam.id == circle.id) {
         console.log('Match: ' + notam.id);
 
-        console.dir(notam);
-        let date1 = formatDate(notam.fromDate);
-        let date2 = formatDate(notam.toDate);
+        // check if there are other overlapping notams at the same coordinate
+        let myOtherNotams = findNotamsAt(notam.id, notam.lat, notam.lng);
+        console.log(`Found ${myOtherNotams.length} overlapping notams`);
+        console.dir(myOtherNotams);
+
+        if (myOtherNotams.length > 0) {
+          let OLcontents =
+            '<h1>Notice</h1><p>There are overlapping notams for this position</p><ul>';
+          for (var i = 0; i < myOtherNotams.length; i++) {
+            let n = myOtherNotams[i];
+            OLcontents += '<li>' + createInfoHtml(n) + '</li>';
+          }
+          OLcontents += '</ul>';
+          $('#overlapping').html(OLcontents);
+        }
+
         infoWindow.setOptions({
-          content: `<p>${notam.text}</p>` +
-            `<p>Altitudes: ${notam.fromAlt} - ${notam.toAlt} within a radius of: ${notam.radius} nm<br/>` +
-            `Valid from: ${date1} to: ${date2}<br/></p>`
+          content: createInfoHtml(notam)
         });
       }
 
@@ -82,6 +97,15 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
 }
 
 
+function createInfoHtml(n) {
+  let date1 = formatDate(n.fromDate);
+  let date2 = formatDate(n.toDate);
+  let html = `<p>${n.text}</p>` +
+    `<p>Altitudes: ${n.fromAlt} - ${n.toAlt} within a radius of: ${n.radius} nm<br/>` +
+    `Valid from: ${date1} to: ${date2}<br/></p>`
+  return html;
+}
+
 /**
  * Format Date Object to be more readable and clearly UTC time.
  *
@@ -90,4 +114,26 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
  */
 function formatDate(d) {
   return (d.substr(0, 10) + ' ' + d.substr(11, 5) + ' UTC');
+}
+
+
+/**
+ * Given a Notam ID, will check if there are overlapping Notams and return a list.
+ *
+ * @param  {String} id  id of Notam to exclude from search
+ * @param  {String} lat lat component
+ * @param  {String} lng lng component
+ * @return {List of String}     List of notams that are overlapping
+ */
+function findNotamsAt(id, lat, lng) {
+  let list = [];
+  for (var i = 0; i < notam_objects.length; i++) {
+    let n = notam_objects[i];
+    if (n.id != id) {
+      if (n.lat == lat && n.lng == lng) {
+        list.push(n);
+      }
+    }
+  }
+  return list;
 }
