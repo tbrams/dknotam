@@ -30,7 +30,7 @@ function initMap() {
     notam_objects = JSON.parse(stringData);
 
     // Construct the circle for each value in notam_objects.
-    for (var i = 0; i < notam_objects.length; i++) {
+    for (let i = 0; i < notam_objects.length; i++) {
       var notam = notam_objects[i];
 
       // For upcoming notams, use another color
@@ -68,7 +68,7 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
   google.maps.event.addListener(circle, 'click', function(ev) {
     console.log('Clicked on Id: ' + circle.id);
 
-    for (var i in notam_objects) {
+    for (let i in notam_objects) {
       let notam = notam_objects[i];
       if (notam.id == circle.id) {
         console.log('Match: ' + notam.id);
@@ -82,7 +82,7 @@ function addIdToCircle(circle, i, map, infoWindow, id) {
         if (myOtherNotams.length > 0) {
           let OLcontents =
             '<h1>Notice</h1><p>There are overlapping notams for this position</p><ul>';
-          for (var i = 0; i < myOtherNotams.length; i++) {
+          for (let i = 0; i < myOtherNotams.length; i++) {
             let n = myOtherNotams[i];
             OLcontents += '<li>' + createInfoHtml(n) + '</li>';
           }
@@ -132,7 +132,7 @@ function formatDate(d) {
  */
 function findNotamsAt(id, lat, lng) {
   let list = [];
-  for (var i = 0; i < notam_objects.length; i++) {
+  for (let i = 0; i < notam_objects.length; i++) {
     let n = notam_objects[i];
     if (n.id != id) {
       if (n.lat == lat && n.lng == lng) {

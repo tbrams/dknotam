@@ -86,7 +86,7 @@ function parseNotams(notams) {
   let dateSkip = 0;
 
   let count = notams.length;
-  for (var i = 0; i < count; i++) {
+  for (let i = 0; i < count; i++) {
     let notam = notams[i];
     console.log('Raw notam: ' + notam + '\n');
 
